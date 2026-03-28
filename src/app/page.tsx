@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import gsap from "gsap";
@@ -180,10 +181,10 @@ export default function Home() {
         scrollTrigger: {
           trigger: ".cards-section-wrapper",
           start: "center center",
-          end: `+=${cards.length * 500}`, 
+          end: `+=${cards.length * 250}`, 
           pin: true,
           pinSpacing: true, 
-          scrub: 1, 
+          scrub: 0.5, 
         }
       });
 
@@ -264,8 +265,30 @@ export default function Home() {
       .querySelectorAll(".reveal-on-scroll")
       .forEach((el) => observer.observe(el));
 
-    // Interactive Mouse Tracking Logic
+    // Cache DOM queries for performance
+    let cachedShards: HTMLElement[] | null = null;
+    let cachedCards: HTMLElement[] | null = null;
+    let cachedParallax: HTMLElement[] | null = null;
+    let mouseRafId: number | null = null;
+    let scrollRafId: number | null = null;
+
+    const getShards = () => {
+      if (!cachedShards) cachedShards = Array.from(document.querySelectorAll(".shard-parallax")) as HTMLElement[];
+      return cachedShards;
+    };
+    const getCards = () => {
+      if (!cachedCards) cachedCards = Array.from(document.querySelectorAll(".interactive-3d-card")) as HTMLElement[];
+      return cachedCards;
+    };
+    const getParallax = () => {
+      if (!cachedParallax) cachedParallax = Array.from(document.querySelectorAll(".parallax-el")) as HTMLElement[];
+      return cachedParallax;
+    };
+
+    // Interactive Mouse Tracking Logic — batched via rAF
     const handleMouseMove = (e: MouseEvent | TouchEvent) => {
+      if (mouseRafId) return; // Skip if a frame is already queued
+      
       let x = 0, y = 0;
       if ('touches' in e) {
         if (e.touches.length > 0) {
@@ -276,63 +299,59 @@ export default function Home() {
         x = (e as MouseEvent).clientX;
         y = (e as MouseEvent).clientY;
       }
-      
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
 
-      // 1. Background Parallax Shards
-      const shards = document.querySelectorAll(
-        ".shard-parallax"
-      ) as NodeListOf<HTMLElement>;
-      shards.forEach((shard) => {
-        const depth = parseFloat(shard.getAttribute("data-depth") || "0.2");
-        const moveX = (x - windowWidth / 2) * depth;
-        const moveY = (y - windowHeight / 2) * depth;
-        const rotate = (x - windowWidth / 2) * 0.05;
-        shard.style.transform = `translate(${moveX}px, ${moveY}px) rotate(${rotate}deg)`;
-      });
+      mouseRafId = requestAnimationFrame(() => {
+        mouseRafId = null;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
 
-      // 2. 3D Tilt Cards & Glint Effect
-      const cards = document.querySelectorAll(
-        ".interactive-3d-card"
-      ) as NodeListOf<HTMLElement>;
-      cards.forEach((card) => {
-        const rect = card.getBoundingClientRect();
-        const cardInner = card.querySelector(".card-3d-inner") as HTMLElement;
-        const glint = card.querySelector(".glint-overlay") as HTMLElement;
+        // 1. Background Parallax Shards
+        getShards().forEach((shard) => {
+          const depth = parseFloat(shard.getAttribute("data-depth") || "0.2");
+          const moveX = (x - windowWidth / 2) * depth;
+          const moveY = (y - windowHeight / 2) * depth;
+          const rotate = (x - windowWidth / 2) * 0.05;
+          shard.style.transform = `translate(${moveX}px, ${moveY}px) rotate(${rotate}deg)`;
+        });
 
-        const isHovering =
-          x >= rect.left &&
-          x <= rect.right &&
-          y >= rect.top &&
-          y <= rect.bottom;
+        // 2. 3D Tilt Cards & Glint Effect
+        getCards().forEach((card) => {
+          const rect = card.getBoundingClientRect();
+          const cardInner = card.querySelector(".card-3d-inner") as HTMLElement;
+          const glint = card.querySelector(".glint-overlay") as HTMLElement;
 
-        if (isHovering && cardInner) {
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
-          const deltaX = (x - centerX) / (rect.width / 2);
-          const deltaY = (y - centerY) / (rect.height / 2);
+          const isHovering =
+            x >= rect.left &&
+            x <= rect.right &&
+            y >= rect.top &&
+            y <= rect.bottom;
 
-          const tiltX = deltaY * 12;
-          const tiltY = -deltaX * 12;
+          if (isHovering && cardInner) {
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const deltaX = (x - centerX) / (rect.width / 2);
+            const deltaY = (y - centerY) / (rect.height / 2);
 
-          cardInner.style.transform = `rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(1.02)`;
+            const tiltX = deltaY * 12;
+            const tiltY = -deltaX * 12;
 
-          if (glint) {
-            const glintX = ((x - rect.left) / rect.width) * 100;
-            const glintY = ((y - rect.top) / rect.height) * 100;
-            glint.style.setProperty("--glint-x", `${glintX}%`);
-            glint.style.setProperty("--glint-y", `${glintY}%`);
+            cardInner.style.transform = `rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(1.02)`;
+
+            if (glint) {
+              const glintX = ((x - rect.left) / rect.width) * 100;
+              const glintY = ((y - rect.top) / rect.height) * 100;
+              glint.style.setProperty("--glint-x", `${glintX}%`);
+              glint.style.setProperty("--glint-y", `${glintY}%`);
+            }
+          } else if (cardInner) {
+            cardInner.style.transform = "rotateX(0deg) rotateY(0deg) scale(1)";
           }
-        } else if (cardInner) {
-          cardInner.style.transform = "rotateX(0deg) rotateY(0deg) scale(1)";
-        }
+        });
       });
     };
 
     const handleTouchEnd = () => {
-      const cards = document.querySelectorAll(".interactive-3d-card") as NodeListOf<HTMLElement>;
-      cards.forEach((card) => {
+      getCards().forEach((card) => {
         const cardInner = card.querySelector(".card-3d-inner") as HTMLElement;
         if (cardInner) {
           cardInner.style.transform = "rotateX(0deg) rotateY(0deg) scale(1)";
@@ -340,29 +359,31 @@ export default function Home() {
       });
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     window.addEventListener("touchmove", handleMouseMove, { passive: true });
     window.addEventListener("touchend", handleTouchEnd, { passive: true });
 
-    // Parallax
+    // Parallax — batched via rAF
     const handleScroll = () => {
-      const scrolled = window.scrollY;
-      const parallaxEls = document.querySelectorAll(
-        ".parallax-el"
-      ) as NodeListOf<HTMLElement>;
-
-      parallaxEls.forEach((el) => {
-        const speed = parseFloat(el.getAttribute("data-speed") || "1");
-        const yPos = -(scrolled * speed) / 5;
-        const rotation = (scrolled * speed) / 25;
-        el.style.transform = `translateY(${yPos}px) rotate(${rotation}deg)`;
+      if (scrollRafId) return;
+      scrollRafId = requestAnimationFrame(() => {
+        scrollRafId = null;
+        const scrolled = window.scrollY;
+        getParallax().forEach((el) => {
+          const speed = parseFloat(el.getAttribute("data-speed") || "1");
+          const yPos = -(scrolled * speed) / 5;
+          const rotation = (scrolled * speed) / 25;
+          el.style.transform = `translateY(${yPos}px) rotate(${rotation}deg)`;
+        });
       });
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
       observer.disconnect();
+      if (mouseRafId) cancelAnimationFrame(mouseRafId);
+      if (scrollRafId) cancelAnimationFrame(scrollRafId);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("touchmove", handleMouseMove);
       window.removeEventListener("touchend", handleTouchEnd);
@@ -546,7 +567,7 @@ export default function Home() {
                 <div className="card-3d-inner w-full h-full">
                   <div className="absolute inset-0 bg-primary/20 rounded-full blur-[120px] -z-10 animate-pulse-aura"></div>
                   <div className="w-full h-full rounded-[2.5rem] overflow-hidden glass-panel gold-lining shadow-2xl relative">
-                    <img className="w-full h-full object-cover opacity-60 mix-blend-screen scale-110" alt="Futuristic floating crystal lavender structures for education" src="/images/hero_crystal.png" />
+                    <Image fill priority sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover opacity-60 mix-blend-screen scale-110" alt="Futuristic floating crystal lavender structures for education" src="/images/hero_crystal.png" />
                     <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent"></div>
                     <div className="glint-overlay"></div>
                   </div>
@@ -617,7 +638,7 @@ export default function Home() {
                 <div className="card-3d-inner">
                   <div className="h-48 md:h-56 lg:h-64 overflow-hidden relative">
                     <div className="absolute inset-0 bg-primary/10 group-hover:bg-primary/20 transition-colors z-10 pointer-events-none"></div>
-                    <img className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000 opacity-40 mix-blend-screen" alt="Corporate networking abstract" src="/images/corporate_networking.png" />
+                    <Image fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover group-hover:scale-125 transition-transform duration-1000 opacity-40 mix-blend-screen" alt="Corporate networking abstract" src="/images/corporate_networking.png" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#130f1f] to-transparent"></div>
                   </div>
                   <div className="p-6 md:p-8 lg:p-12 relative">
@@ -634,7 +655,7 @@ export default function Home() {
                 <div className="card-3d-inner">
                   <div className="h-48 md:h-56 lg:h-64 overflow-hidden relative">
                     <div className="absolute inset-0 bg-amethyst/10 group-hover:bg-amethyst/20 transition-colors z-10 pointer-events-none"></div>
-                    <img className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000 opacity-40 mix-blend-screen" alt="IT Infrastructure abstract" src="/images/it_infrastructure.png" />
+                    <Image fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover group-hover:scale-125 transition-transform duration-1000 opacity-40 mix-blend-screen" alt="IT Infrastructure abstract" src="/images/it_infrastructure.png" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#130f1f] to-transparent"></div>
                   </div>
                   <div className="p-6 md:p-8 lg:p-12 relative">
