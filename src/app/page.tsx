@@ -505,7 +505,7 @@ export default function Home() {
         </div>
       </div>
 
-      <nav className={`fixed top-0 left-0 right-0 z-50 glass-panel border-b border-white/10 transition-[height] duration-500 ease-in-out flex flex-col justify-start px-6 lg:px-20 ${isMobileMenuOpen ? 'h-[300px]' : 'h-16 md:h-20 shadow-none'} overflow-hidden`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 glass-panel border-b border-white/10 transition-[height] duration-500 ease-in-out flex flex-col justify-start px-6 lg:px-20 ${isMobileMenuOpen ? 'h-[350px]' : 'h-16 md:h-20 shadow-none'} overflow-hidden`}>
         <div className="w-full flex items-center justify-between h-16 md:h-20 shrink-0">
           <div className="flex items-center gap-2 md:gap-3 group cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
             <div className="w-6 h-6 md:w-8 md:h-8 text-primary gold-glow-effect transition-transform duration-500 group-hover:rotate-[360deg] group-hover:scale-125">
@@ -517,10 +517,11 @@ export default function Home() {
           </div>
           
           <div className="hidden md:flex items-center gap-10">
-            <a className="text-xs font-bold uppercase tracking-widest hover:text-primary hover:scale-110 transition-all font-label" href="#solutions">Our Solutions</a>
-            <a className="text-xs font-bold uppercase tracking-widest hover:text-primary hover:scale-110 transition-all font-label" href="#corporate">Corporate</a>
-            <a className="text-xs font-bold uppercase tracking-widest hover:text-primary hover:scale-110 transition-all font-label" href="#contact">Consultation</a>
-            <a href="#contact" className="gold-button px-7 py-2.5 rounded-full font-bold text-[10px] tracking-widest uppercase shadow-lg font-label">
+            <a className="text-xs font-bold uppercase tracking-widest hover:text-primary hover:scale-110 transition-all font-label" href="/#solutions">Our Solutions</a>
+            <a className="text-xs font-bold uppercase tracking-widest hover:text-primary hover:scale-110 transition-all font-label" href="/#corporate">Corporate</a>
+            <a className="text-xs font-bold uppercase tracking-widest hover:text-primary hover:scale-110 transition-all font-label" href="/#contact">Consultation</a>
+            <a className="text-xs font-bold uppercase tracking-widest hover:text-primary hover:scale-110 transition-all font-label" href="/register">Register Here</a>
+            <a href="/#contact" className="gold-button px-7 py-2.5 rounded-full font-bold text-[10px] tracking-widest uppercase shadow-lg font-label">
               Connect Now
             </a>
           </div>
@@ -531,10 +532,11 @@ export default function Home() {
         </div>
 
         <div className={`md:hidden flex flex-col items-center gap-6 mt-4 transition-all duration-500 origin-top transform ${isMobileMenuOpen ? 'opacity-100 scale-y-100 pointer-events-auto' : 'opacity-0 scale-y-75 pointer-events-none'}`}>
-          <a className="text-xs font-bold uppercase tracking-widest hover:text-primary transition-all font-label" href="#solutions" onClick={() => setIsMobileMenuOpen(false)}>Our Solutions</a>
-          <a className="text-xs font-bold uppercase tracking-widest hover:text-primary transition-all font-label" href="#corporate" onClick={() => setIsMobileMenuOpen(false)}>Corporate</a>
-          <a className="text-xs font-bold uppercase tracking-widest hover:text-primary transition-all font-label" href="#contact" onClick={() => setIsMobileMenuOpen(false)}>Consultation</a>
-          <a href="#contact" onClick={() => setIsMobileMenuOpen(false)} className="gold-button w-full text-center px-7 py-3 mt-2 rounded-full font-bold text-[10px] tracking-widest uppercase shadow-lg font-label">
+          <a className="text-xs font-bold uppercase tracking-widest hover:text-primary transition-all font-label" href="/#solutions" onClick={() => setIsMobileMenuOpen(false)}>Our Solutions</a>
+          <a className="text-xs font-bold uppercase tracking-widest hover:text-primary transition-all font-label" href="/#corporate" onClick={() => setIsMobileMenuOpen(false)}>Corporate</a>
+          <a className="text-xs font-bold uppercase tracking-widest hover:text-primary transition-all font-label" href="/#contact" onClick={() => setIsMobileMenuOpen(false)}>Consultation</a>
+          <a className="text-xs font-bold uppercase tracking-widest hover:text-primary transition-all font-label" href="/register" onClick={() => setIsMobileMenuOpen(false)}>Register Here</a>
+          <a href="/#contact" onClick={() => setIsMobileMenuOpen(false)} className="gold-button w-full text-center px-7 py-3 mt-2 rounded-full font-bold text-[10px] tracking-widest uppercase shadow-lg font-label">
             Connect Now
           </a>
         </div>
